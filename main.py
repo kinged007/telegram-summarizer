@@ -51,7 +51,12 @@ async def main():
     
     # Prepare the prompt
     print("Preparing the prompt...")
-    full_prompt = f"{messages_1}\n\n{messages_2}\n\n{prompt_text}"
+    full_prompt = [
+        {'role': 'system', 'content': 'You are a helpful assistant.'},
+        {'role': 'user', 'content': messages_1},
+        {'role': 'user', 'content': messages_2},
+        {'role': 'user', 'content': prompt_text}
+    ]
 
     # Initialize LiteLLM
     print(f"Initializing LiteLLM with provider: {llm_provider}, model: {llm_model}")
