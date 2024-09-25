@@ -27,8 +27,9 @@ client = TelegramClient('session_name', api_id, api_hash)
 async def fetch_messages(channel_id):
     print(f"Fetching messages from channel ID: {channel_id}")
     messages = []
-    async for message in client.iter_messages(channel_id, offset_date=datetime.now() - timedelta(days=7)):
-        messages.append(f"{message.date}: {message.sender_id}: {message.text}")
+    async for message in client.iter_messages(channel_id, offset_date=datetime.now() - timedelta(days=7), reverse=True):
+        messages.append(f"{message.date}: {message.post_author}: {message.text}")
+        print(f" - {message.date}: {message.post_author}: {message.text}")
     print(f"Fetched {len(messages)} messages from channel ID: {channel_id}")
     return "\n".join(messages)
 
@@ -41,7 +42,7 @@ async def main():
     print("Fetching messages from both channels...")
     messages_1 = await fetch_messages(channel_id_1)
     messages_2 = await fetch_messages(channel_id_2)
-
+    return
     # Prepare the prompt
     print("Preparing the prompt...")
     full_prompt = f"{messages_1}\n\n{messages_2}\n\n{prompt_text}"
