@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from telethon import TelegramClient
-from litellm import LiteLLM
+import litellm
 
 # Load environment variables
 load_dotenv()
@@ -32,10 +32,10 @@ async def fetch_messages(channel_id):
             sender = await message.get_sender()
             sender_name = sender.first_name if sender else "Unknown"
             messages.append(f"{message.date}: {sender_name}: {message.text}")
-            print(f" - {message.date}: {sender_name}: {message.text}")
+            print(f" - {message.date}: {sender_name}: {message.text}"[:100])
         else:
             messages.append(f"{message.date}: {message.text}")
-            print(f" - {message.date}: {message.text}")
+            print(f" - {message.date}: {message.text}"[:100])
     print(f"Fetched {len(messages)} messages from channel ID: {channel_id}")
     return "\n".join(messages)
 
@@ -48,19 +48,22 @@ async def main():
     print("Fetching messages from both channels...")
     messages_1 = await fetch_messages(channel_id_1)
     messages_2 = await fetch_messages(channel_id_2)
-    return
+    
     # Prepare the prompt
     print("Preparing the prompt...")
     full_prompt = f"{messages_1}\n\n{messages_2}\n\n{prompt_text}"
 
     # Initialize LiteLLM
     print(f"Initializing LiteLLM with provider: {llm_provider}, model: {llm_model}")
-    llm = LiteLLM(provider=llm_provider, model=llm_model, api_key=llm_api_key)
-
+    # llm = LiteLLM(api_key=llm_api_key)
+    litellm.api_key = llm_api_key
+    
     # Get response from LLM
     print("Sending prompt to LLM and awaiting response...")
-    response = llm.complete(full_prompt)
+    
+    response = litellm.completion(messages=full_prompt, model=f"{llm_provider}/{llm_model}")
     print("Received response from LLM.")
+    print(response)
 
     # Send response to the specified Telegram channel
     print(f"Sending response to channel ID: {response_channel_id}")
