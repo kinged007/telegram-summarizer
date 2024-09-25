@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from telethon import TelegramClient
-from lite_llm import LiteLLM
+from litellm import LiteLLM
 
 # Load environment variables
 load_dotenv()
