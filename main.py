@@ -25,28 +25,40 @@ llm_api_key = os.getenv('LLM_API_KEY')
 client = TelegramClient('session_name', api_id, api_hash)
 
 async def fetch_messages(channel_id):
-    await client.start(phone)
+    print(f"Fetching messages from channel ID: {channel_id}")
     messages = []
     async for message in client.iter_messages(channel_id, offset_date=datetime.now() - timedelta(days=7)):
         messages.append(f"{message.date}: {message.sender_id}: {message.text}")
+    print(f"Fetched {len(messages)} messages from channel ID: {channel_id}")
     return "\n".join(messages)
 
 async def main():
+    print("Starting Telegram client...")
+    await client.start(phone)
+    print("Telegram client started.")
+
     # Fetch messages from both channels
+    print("Fetching messages from both channels...")
     messages_1 = await fetch_messages(channel_id_1)
     messages_2 = await fetch_messages(channel_id_2)
 
     # Prepare the prompt
+    print("Preparing the prompt...")
     full_prompt = f"{messages_1}\n\n{messages_2}\n\n{prompt_text}"
 
     # Initialize LiteLLM
+    print(f"Initializing LiteLLM with provider: {llm_provider}, model: {llm_model}")
     llm = LiteLLM(provider=llm_provider, model=llm_model, api_key=llm_api_key)
 
     # Get response from LLM
+    print("Sending prompt to LLM and awaiting response...")
     response = llm.complete(full_prompt)
+    print("Received response from LLM.")
 
     # Send response to the specified Telegram channel
+    print(f"Sending response to channel ID: {response_channel_id}")
     await client.send_message(response_channel_id, response)
+    print("Response sent successfully.")
 
 # Run the script
 with client:
