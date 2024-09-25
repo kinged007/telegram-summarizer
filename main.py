@@ -28,10 +28,14 @@ async def fetch_messages(channel_id):
     print(f"Fetching messages from channel ID: {channel_id}")
     messages = []
     async for message in client.iter_messages(channel_id, offset_date=datetime.now() - timedelta(days=7), reverse=True):
-        sender = await message.get_sender()
-        sender_name = sender.first_name if sender else "Unknown"
-        messages.append(f"{message.date}: {sender_name}: {message.text}")
-        print(f" - {message.date}: {sender_name}: {message.text}")
+        if message.is_group:
+            sender = await message.get_sender()
+            sender_name = sender.first_name if sender else "Unknown"
+            messages.append(f"{message.date}: {sender_name}: {message.text}")
+            print(f" - {message.date}: {sender_name}: {message.text}")
+        else:
+            messages.append(f"{message.date}: {message.text}")
+            print(f" - {message.date}: {message.text}")
     print(f"Fetched {len(messages)} messages from channel ID: {channel_id}")
     return "\n".join(messages)
 
