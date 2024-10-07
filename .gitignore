@@ -1,0 +1,8 @@
+.aider*
+aider.sh
+*.session
+.env
+*.log
+venv/
+.DS_Store
+
