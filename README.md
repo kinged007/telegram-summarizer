@@ -11,3 +11,7 @@ To get the channel ID's, you can forward any message from the channel you want t
 Rename the `sample.env` file to `.env` and modify the variables.
 
 Run `sh run.sh` or `run.bat` to start the script.
+
+## Dependencies
+
+Install required packages from the `requirements.txt` file and `pip`. It uses `telethon` to interact with Telegram.
