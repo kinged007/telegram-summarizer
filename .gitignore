@@ -5,4 +5,6 @@ aider.sh
 *.log
 venv/
 .DS_Store
+logs/
+Templates.txt
 

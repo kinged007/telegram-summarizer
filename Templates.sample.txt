@@ -1,0 +1,25 @@
+# Telegram Templates File
+# Format:
+# For chat IDs: chat:ChatName=ChatID
+# For prompt templates: prompt:TemplateName=Template Text
+
+# Chat IDs
+chat:John=-1001234567890
+chat:Alice=-1009876543210
+chat:TeamChat=-1001122334455
+chat:ProjectDiscussion=-1005544332211
+chat:NewsChannel=-1007788990011
+chat:AnnouncementsChannel=-1001234987654
+
+# Prompt Templates
+
+# System defaults
+prompt:PROMPT_SYSTEM=You are an expert copywriter, ready to summarize content.
+prompt:PROMPT_TEXT=This is a transcript from groups. Please summarize the conversation into a short succinct text, with the key takeaways. You will need to filter out the general chat and unrelated messages. The text that occurs later in the conversation carries more weight than the earlier text, as the conversation evolves and the information becomes more refined. Please take note that some events may have already occured. Please provide the summary in a clear and concise manner, and ensure that the information is accurate and relevant. Please use telegram compatible markdown. Header hashtags are not compatible.
+
+# Custom templates
+prompt:Technical=Please summarize the technical discussions in these conversations. Focus on code snippets, architecture decisions, and technical problems that were solved.
+prompt:Meeting=Please summarize this conversation as if it were meeting minutes. Include key decisions, action items, and responsibilities assigned to team members.
+prompt:Daily=Please provide a concise daily summary of the most important updates and announcements from these conversations.
+prompt:Weekly=Please provide a comprehensive weekly summary of all discussions, organized by topic. Include all important decisions, announcements, and ongoing discussions.
+prompt:Bugs=Please extract and summarize all bug reports and issues mentioned in these conversations. Include any proposed solutions or workarounds.
