@@ -24,6 +24,7 @@ def read_templates_file():
     """Read the Templates.txt file and return dictionaries for chat IDs and prompt templates"""
     chat_templates = {}
     prompt_templates = {}
+    job_templates = {}
 
     try:
         if os.path.isfile('Templates.txt'):
@@ -50,6 +51,11 @@ def read_templates_file():
                             prompt_name = key[7:]
                             prompt_templates[prompt_name] = value
                             logger.debug(f"Loaded prompt template: {prompt_name}")
+                        elif key.startswith('job:') and value:
+                            # Extract job name without the prefix
+                            job_name = key[4:]
+                            job_templates[job_name] = value
+                            logger.debug(f"Loaded job template: {job_name}")
 
             logger.debug(f"Loaded {len(chat_templates)} chat entries and {len(prompt_templates)} prompt templates from Templates.txt")
         else:
@@ -57,7 +63,7 @@ def read_templates_file():
     except Exception as e:
         logger.error(f"Error reading Templates.txt: {str(e)}")
 
-    return chat_templates, prompt_templates
+    return chat_templates, prompt_templates, job_templates
 
 
 def resolve_chat_id(chat_arg, chat_templates):
@@ -94,7 +100,7 @@ def resolve_prompt_template(template_name, prompt_templates):
     return None
 
 
-def parse_args():
+def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description='Telegram Chat Summarizer - Summarize messages from multiple Telegram chats using AI.',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -136,9 +142,10 @@ Note:
 
     parser.add_argument('--chats',
                       help='Chat IDs or names from Templates.txt to summarize from (can be comma-separated or multiple values)',
-                      required=True,
-                      nargs='+',
-                      type=str)
+                      required=False,
+                      nargs='*',
+                      type=str,
+                      default=[])
 
     parser.add_argument('--send',
                       help='Chat IDs or names from Templates.txt where the summary should be sent (can be comma-separated or multiple values)',
@@ -168,11 +175,15 @@ Note:
     parser.add_argument('--mock',
                       help='Use mock response instead of calling the LLM API',
                       action='store_true')
+    
+    parser.add_argument('--job',
+                      help='Name of a job template from Templates.txt to use instead of the default prompt',
+                      default='')
 
-    args = parser.parse_args()
-
+    args, unkown = parser.parse_known_args(args)
+    
     # if no arguments are passed, then we stop the script here.
-    if not any(vars(args).values()):
+    if not any(vars(args).values()) and not args.job:
         parser.print_help()
         sys.exit(1)
 
@@ -283,7 +294,7 @@ async def process_telegram_data(client, args, env_vars):
     console.print("[bold blue]Setting up...[/bold blue]")
 
     # Load the templates file
-    chat_templates, prompt_templates = read_templates_file()
+    chat_templates, prompt_templates, job_templates = read_templates_file()
 
     # Check if PROMPT_SYSTEM exists in prompt templates
     if 'PROMPT_SYSTEM' in prompt_templates:
@@ -866,7 +877,7 @@ This summary covers the main points of discussion. For more detailed information
         )
         console.print(debug_panel)
 
-def setup_logging(debug_mode=False):
+def setup_logging():
     """Set up logging configuration with a logs directory"""
     # Create logs directory if it doesn't exist
     logs_dir = os.path.join(os.getcwd(), "logs")
@@ -892,15 +903,33 @@ def setup_logging(debug_mode=False):
 async def main():
     """Main entry point for the script"""
     try:
+        
+        # Configure logger based on debug mode
+        log_file = setup_logging()
+        
         # Check for .env file and load environment variables
         env_vars = check_env_file()
 
         # Parse command line arguments
         args = parse_args()
 
-        # Configure logger based on debug mode
-        log_file = setup_logging(args.debug)
+        
+        if args.job:
+            # Load the templates file
+            chat_templates, prompt_templates, job_templates = read_templates_file()
+            job_template = job_templates.get(args.job)
+            if job_template:
+                logger.info(f"Executing with Job template '{args.job}' found in Templates.txt")
+                # Parse the job template
+                job_args = job_template.split()
+                # Override the command line arguments with the job template
+                args = parse_args(job_args)
+                
+            else:
+                console.print(f"[bold red]Error: Job template '{args.job}' not found in Templates.txt[/bold red]")
+                sys.exit(1)
 
+    
         logger.debug("Starting Telegram Summarizer")
         logger.debug(f"Mode: {'Debug' if args.debug else 'Normal'}")
         logger.debug(f"Arguments: {args}")
@@ -927,5 +956,7 @@ async def main():
         sys.exit(1)
 
 if __name__ == "__main__":
+    
+    
     # Run the async main function
     asyncio.run(main())
