@@ -86,4 +86,4 @@ if %ERRORLEVEL% equ 0 (
 :: Start the application
 echo Launching the application
 
-python main.py %*
+python summarize.py %*

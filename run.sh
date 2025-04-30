@@ -82,5 +82,5 @@ fi
 
 # Start the application
 echo "Starting App"
-$PYTHON main.py "$@"
+$PYTHON summarize.py "$@"
 # uvicorn main:app --host 0.0.0.0 --port 88 "$@" --reload 
