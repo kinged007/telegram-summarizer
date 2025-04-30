@@ -2,6 +2,7 @@
 # Format:
 # For chat IDs: chat:ChatName=ChatID
 # For prompt templates: prompt:TemplateName=Template Text
+# For job templates: job:JobName=--argument1 value1 --argument2 value2
 
 # Chat IDs
 chat:John=-1001234567890
@@ -23,3 +24,22 @@ prompt:Meeting=Please summarize this conversation as if it were meeting minutes.
 prompt:Daily=Please provide a concise daily summary of the most important updates and announcements from these conversations.
 prompt:Weekly=Please provide a comprehensive weekly summary of all discussions, organized by topic. Include all important decisions, announcements, and ongoing discussions.
 prompt:Bugs=Please extract and summarize all bug reports and issues mentioned in these conversations. Include any proposed solutions or workarounds.
+
+# Job Templates
+# Format: job:JobName=--argument1 value1 --argument2 value2 ...
+# These are complete command line configurations that can be run with: python summarize.py --job JobName
+
+# Daily update job that runs on weekdays
+job:DailyUpdate=--chats John,TeamChat --send TeamChat --days 1 --prompt_template Daily
+
+# Weekly report that runs on weekends
+job:WeeklyReport=--chats John,TeamChat,ProjectDiscussion --send TeamChat --days 7 --prompt_template Weekly
+
+# Technical summary for a specific topic/thread
+job:TechnicalSummary=--chats=-1001234567890_123 --send=-1001122334455 --prompt_template Technical
+
+# Bug report summary with debug mode enabled
+job:BugReport=--chats ProjectDiscussion --send TeamChat --prompt_template Bugs --debug
+
+# Mock job for testing without making API calls
+job:TestJob=--chats John --mock

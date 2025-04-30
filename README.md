@@ -52,13 +52,16 @@ The script supports the following command line arguments:
 
 | Argument | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `--chats` | Chat IDs or names from Templates.txt to summarize from (can be comma-separated or multiple values) | Yes | None |
+| `--chats` | Chat IDs or names from Templates.txt to summarize from (can be comma-separated or multiple values) | Yes* | None |
 | `--send` | Chat IDs or names from Templates.txt where the summary should be sent (can be comma-separated or multiple values) | No | None |
 | `--days` | Number of days to look back for messages | No | 3 |
 | `--prompt` | Additional instructions for the AI summarizer | No | "" |
 | `--prompt_template` | Name(s) of prompt template(s) from Templates.txt to use instead of the default prompt | No | None |
 | `--debug` | Enable debug mode to see detailed information | No | False |
 | `--mock` | Use mock response instead of calling the LLM API (for testing) | No | False |
+| `--job` | Name of a job template from Templates.txt to use (overrides all other arguments) | No | None |
+
+*Not required if using `--job` argument
 
 #### Examples
 
@@ -100,17 +103,21 @@ python summarize.py --chats -1001234567890 --debug
 
 # Use mock mode for testing (no API call)
 python summarize.py --chats -1001234567890 --mock
+
+# Use a predefined job template from Templates.txt
+python summarize.py --job DailyUpdate
 ```
 
 ### Using Templates.txt
 
-You can use the `Templates.txt` file to store chat names and prompt templates. This allows you to use friendly names instead of numeric IDs when running the script, and to use predefined prompt templates.
+You can use the `Templates.txt` file to store chat names, prompt templates, and job templates. This allows you to use friendly names instead of numeric IDs when running the script, use predefined prompt templates, and create reusable job configurations.
 
 The Templates.txt file uses a simple key-value format with prefixes:
 ```
 # Comments start with #
 chat:ChatName=ChatID
 prompt:TemplateName=Template Text
+job:JobName=--argument1 value1 --argument2 value2
 ```
 
 For example:
@@ -123,6 +130,10 @@ chat:ProjectTopic=-1001234567890_123  # Topic-specific chat (underscore format w
 # Prompt Templates
 prompt:Technical=Please summarize the technical discussions in these conversations.
 prompt:Meeting=Please summarize this conversation as if it were meeting minutes.
+
+# Job Templates
+job:DailyUpdate=--chats John --send TeamChat --days 1 --prompt_template Daily
+job:WeeklyReport=--chats John,ProjectDiscussion --send TeamChat --days 7 --prompt_template Weekly
 ```
 
 #### Special Template Names
@@ -155,6 +166,30 @@ python summarize.py --chats ProjectTopic
 ```
 
 **Tip:** Using Templates.txt is the recommended way to work with topic-specific chats, as it avoids the command line parsing issues with underscores.
+
+#### Using Job Templates
+
+Job templates allow you to store complete command configurations in the Templates.txt file and run them with a single command. This is especially useful for recurring tasks like daily or weekly summaries.
+
+To create a job template, add a line with the `job:` prefix followed by the job name and the complete command line arguments:
+
+```
+job:JobName=--argument1 value1 --argument2 value2 ...
+```
+
+For example:
+```
+job:DailyUpdate=--chats John --send TeamChat --days 1 --prompt_template Daily
+job:WeeklyReport=--chats John,ProjectDiscussion --send TeamChat --days 7 --prompt_template Weekly --debug
+job:TechnicalSummary=--chats=-1001234567_789 --send=-1009876543 --prompt_template Technical
+```
+
+To run a job template, use the `--job` argument:
+```bash
+python summarize.py --job DailyUpdate
+```
+
+This will execute the script with all the arguments defined in the job template, overriding any other arguments provided on the command line. Job templates can include any valid command line arguments, including multiple chats, send targets, prompt templates, and flags like `--debug` or `--mock`.
 
 ## Configuration
 
@@ -336,11 +371,18 @@ crontab -e
 4. **Test your cron job** with a more frequent schedule before setting it to your desired interval
 5. **Check the log file** after the scheduled time to verify the job ran successfully
 
-### Example Cron Entry:
+### Example Cron Entries:
 
 ```
-# Run telegram summarizer daily at 8:00 AM
+# Run telegram summarizer daily at 8:00 AM with explicit arguments
 0 8 * * * cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --chats John,Sally --days 0 --send TeamChat --prompt_template Meeting >> logs/cron.log 2>&1
+
+# Run telegram summarizer using a job template (recommended for complex configurations)
+0 8 * * * cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --job DailyUpdate >> logs/cron.log 2>&1
+
+# Run different job templates at different times
+0 8 * * 1-5 cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --job DailyUpdate >> logs/cron.log 2>&1
+0 9 * * 0 cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --job WeeklyReport >> logs/cron.log 2>&1
 ```
 
 ### Troubleshooting Cron Issues:
@@ -367,11 +409,19 @@ On macOS, Apple recommends using `launchd` instead of cron for scheduling tasks.
     <array>
         <string>/bin/bash</string>
         <string>/full/path/to/telegram-summarizer/run.sh</string>
+        <string>--job</string>
+        <string>DailyUpdate</string>
+    </array>
+    <!-- Alternative with explicit arguments:
+    <array>
+        <string>/bin/bash</string>
+        <string>/full/path/to/telegram-summarizer/run.sh</string>
         <string>--chats</string>
         <string>ChatName</string>
         <string>--send</string>
         <string>TargetChat</string>
     </array>
+    -->
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
@@ -410,9 +460,13 @@ launchctl start com.username.telegramsummarizer
 
 ## Future Improvements
 
-- Test with other LLM providers
-- Add support for more Telegram message types (e.g., photos, videos)
-- Implement caching to avoid redundant API calls
-- Allow to send message as a different entity, eg. as a group the user owns/manages.
-- Add more options for the output of generated content, including `file`, `webhook`, and `console` (console will not print anything else to the console except the generated content).
+- [x] Add support for Job templates, which can be used to run the script with predefined arguments
+- [ ] Test with other LLM providers
+- [ ] Add support for more Telegram message types (e.g., photos, videos)
+- [ ] Implement caching to avoid redundant API calls
+- [ ] Allow to send message as a different entity, eg. as a group the user owns/manages
+- [ ] Add more options for the output of generated content, including `file`, `webhook`, and `console` (console will not print anything else to the console except the generated content)
+- [ ] Add support for filtering messages by user or keyword
+- [ ] Implement message deduplication for cross-posted content
+- [ ] Add support for custom formatting of the summary output
 
