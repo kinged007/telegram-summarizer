@@ -2,6 +2,20 @@
 
 This script connects to specific Telegram channels/groups, collects the last messages from a predefined number of days, then compiles them into a prompt for an LLM (Large Language Model). The AI-generated summary can then be displayed in the console and/or sent to designated Telegram channels.
 
+## ✨ Features
+
+- 🤖 **AI-Powered Summaries**: Leverages modern LLMs to create concise, intelligent summaries of Telegram conversations
+- 📱 **Multi-Channel Support**: Collect messages from multiple Telegram channels, groups, and topics in a single run
+- 📊 **Progress Tracking**: Beautiful progress bars show real-time status of message collection and processing
+- 📝 **Customizable Prompts**: Tailor summaries with custom instructions or predefined templates
+- 🔄 **Job Templates**: Create and run predefined configurations for recurring summarization tasks
+- 📅 **Automation Ready**: Easily schedule with cron jobs or launchd for regular summaries
+- 📤 **Flexible Output**: View summaries in the console or send them directly to Telegram channels
+- 📈 **Cost Tracking**: Monitor token usage and costs for each LLM request
+- 🧪 **Mock Mode**: Test functionality without making actual API calls
+- 📊 **Detailed Logging**: Comprehensive logging system for troubleshooting
+- 👤 **Username Resolution**: Support for Telegram usernames and the 'me' entity for easier chat identification
+
 ## How It Works
 
 The script follows this workflow:
@@ -16,7 +30,10 @@ The script follows this workflow:
 
 This script signs into a user's account. It has not been tested with a Bot account, but should work in theory.
 
-To get the channel IDs, you can forward any message from the channel you want to work with to an ID Bot (e.g., @username_to_id_bot). The ID should start with -100 for groups or channels.
+To get the channel IDs, you can:
+1. Forward any message from the channel you want to work with to an ID Bot (e.g., @username_to_id_bot). The ID should start with -100 for groups or channels.
+2. Use Telegram usernames directly (e.g., @username) in your Templates.txt file.
+3. Use the special 'me' value to refer to your own account.
 
 ### Topic-Specific Chats
 
@@ -59,7 +76,7 @@ The script supports the following command line arguments:
 | `--prompt_template` | Name(s) of prompt template(s) from Templates.txt to use instead of the default prompt | No | None |
 | `--debug` | Enable debug mode to see detailed information | No | False |
 | `--mock` | Use mock response instead of calling the LLM API (for testing) | No | False |
-| `--job` | Name of a job template from Templates.txt to use (overrides all other arguments) | No | None |
+| `--job` | Name(s) of job template(s) from Templates.txt to execute (can be comma-separated or multiple values) | No | None |
 
 *Not required if using `--job` argument
 
@@ -106,6 +123,12 @@ python summarize.py --chats -1001234567890 --mock
 
 # Use a predefined job template from Templates.txt
 python summarize.py --job DailyUpdate
+
+# Run multiple job templates (comma-separated)
+python summarize.py --job DailyUpdate,WeeklyReport
+
+# Run multiple job templates (separate arguments)
+python summarize.py --job DailyUpdate WeeklyReport
 ```
 
 ### Using Templates.txt
@@ -115,7 +138,7 @@ You can use the `Templates.txt` file to store chat names, prompt templates, and 
 The Templates.txt file uses a simple key-value format with prefixes:
 ```
 # Comments start with #
-chat:ChatName=ChatID
+chat:ChatName=ChatID  # Can be numeric ID, @username, or 'me'
 prompt:TemplateName=Template Text
 job:JobName=--argument1 value1 --argument2 value2
 ```
@@ -126,6 +149,8 @@ For example:
 chat:John=-1001234567890
 chat:TeamChat=-1009876543210
 chat:ProjectTopic=-1001234567890_123  # Topic-specific chat (underscore format works fine in Templates.txt)
+chat:TelegramSupport=@telegram  # Using username directly
+chat:MyAccount=me  # Your own account
 
 # Prompt Templates
 prompt:Technical=Please summarize the technical discussions in these conversations.
@@ -189,7 +214,28 @@ To run a job template, use the `--job` argument:
 python summarize.py --job DailyUpdate
 ```
 
-This will execute the script with all the arguments defined in the job template, overriding any other arguments provided on the command line. Job templates can include any valid command line arguments, including multiple chats, send targets, prompt templates, and flags like `--debug` or `--mock`.
+You can also run multiple job templates in a single command:
+```bash
+# Run multiple job templates (comma-separated)
+python summarize.py --job DailyUpdate,WeeklyReport
+
+# Run multiple job templates (separate arguments)
+python summarize.py --job DailyUpdate WeeklyReport
+```
+
+This will execute the script with all the arguments defined in each job template, processing them sequentially. Job templates can include any valid command line arguments, including multiple chats, send targets, prompt templates, and flags like `--debug` or `--mock`.
+
+**Important Notes about CLI Flags with Job Templates**:
+
+**Debug Mode**:
+- When debug mode is enabled via the command line (`--debug`), logs will only be shown in the console and not saved to any log file.
+- If you specify `--debug` in a job template definition, but not on the command line, logs will still be saved to a log file.
+- To ensure logs are only shown in the console when running a job, use `--debug` on the command line: `python summarize.py --job DailyUpdate --debug`
+
+**CLI Flag Precedence**:
+- Command line flags like `--debug` and `--mock` take precedence over job template settings.
+- If you run `python summarize.py --job DailyUpdate --mock`, the mock mode will be enabled even if not specified in the job template.
+- This allows you to test job templates with mock mode or enable debug output without modifying the job template definition.
 
 ## Configuration
 
@@ -329,11 +375,11 @@ For detailed information about what's happening, use the `--debug` flag:
 python summarize.py --chats John --debug
 ```
 
-This will display additional information in the console, including token usage, cost, and response time.
+This will display additional information in the console, including token usage, cost, and response time. When debug mode is enabled, logs will only be shown in the console and not saved to any log file.
 
 ### Logs
 
-Check the `logs` directory for detailed logs of each run. The logs include all debug information, even when not running in debug mode.
+Check the `logs` directory for detailed logs of each run. The logs include all debug information when not running in debug mode. When debug mode is enabled (`--debug` flag), logs are only shown in the console and not saved to any log file.
 
 ## Setting Up Cron Jobs
 
@@ -379,6 +425,9 @@ crontab -e
 
 # Run telegram summarizer using a job template (recommended for complex configurations)
 0 8 * * * cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --job DailyUpdate >> logs/cron.log 2>&1
+
+# Run multiple job templates in sequence
+0 8 * * * cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --job DailyUpdate,WeeklyReport >> logs/cron.log 2>&1
 
 # Run different job templates at different times
 0 8 * * 1-5 cd /Users/username/Documents/git/telegram-summarizer && ./run.sh --job DailyUpdate >> logs/cron.log 2>&1
@@ -460,6 +509,7 @@ launchctl start com.username.telegramsummarizer
 
 ## Future Improvements
 
+- [ ] Add support for schedules from the command line and single entry point for cron jobs
 - [x] Add support for Job templates, which can be used to run the script with predefined arguments
 - [ ] Test with other LLM providers
 - [ ] Add support for more Telegram message types (e.g., photos, videos)
@@ -469,4 +519,5 @@ launchctl start com.username.telegramsummarizer
 - [ ] Add support for filtering messages by user or keyword
 - [ ] Implement message deduplication for cross-posted content
 - [ ] Add support for custom formatting of the summary output
+- [x] Support for Telegram usernames and the 'me' entity for easier chat identification
 
