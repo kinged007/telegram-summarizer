@@ -101,14 +101,15 @@ async def process_single_chat_id(chat_id, templates, client, entity_type, result
             result_ids.append(_id)
             logger.debug(f"Added numeric {entity_type}: {resolved_chat}")
         except ValueError:
-            console.print(f"[bold red]Error: Invalid chat ID format for {entity_type} '{chat_id}' (resolved to '{resolved_chat}')[/bold red]")
+            # console.print(f"[bold red]Error: Invalid chat ID format for {entity_type} '{chat_id}' (resolved to '{resolved_chat}')[/bold red]")
             try:
                 console.print(f"[bold red]Fetching entity for {entity_type} '{chat_id}' (resolved to '{resolved_chat}')...[/bold red]")
                 entity = await client.get_entity(resolved_chat)
                 result_ids.append(entity.id)
                 logger.debug(f"Added {entity_type}: {resolved_chat}")
             except Exception as e2:
-                console.print(f"[bold red]Error: Invalid chat ID for {entity_type} '{chat_id}' (resolved to '{resolved_chat}'): {str(e2)}[/bold red]")
+                console.print(f"[bold red]Error: Invalid chat ID for {entity_type} '{chat_id}' (resolved to '{resolved_chat}')[/bold red]")
+                logger.error(e2)
 
 async def fetch_messages(client, chat_id, days, progress=None, task_id=None):
     """
