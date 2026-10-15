@@ -1,5 +1,3 @@
-import os
-import tempfile
 from src.templates import resolve_chat_id, resolve_prompt_template
 
 
@@ -21,8 +19,6 @@ def test_resolve_chat_id_unknown():
 
 
 def test_resolve_chat_id_at_username():
-    # usernames like @telegram are stored as values, numeric check should not match
-    # so resolve via template name
     templates = {"TelegramSupport": "@telegram"}
     assert resolve_chat_id("TelegramSupport", templates) == "@telegram"
 
