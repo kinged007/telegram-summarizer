@@ -6,9 +6,6 @@
 
 Summarize Telegram channel and group conversations with an LLM. Collect the last N days of messages from any set of chats, build a prompt with configurable templates, send it to OpenAI/Anthropic/Groq via LiteLLM, and display the summary in the console or forward it to another Telegram chat.
 
-![Demo](./docs/screenshot.png)
-> Screenshot to be added — shows Rich progress bars and a formatted summary panel.
-
 ## Features
 
 - AI summaries via any LiteLLM-supported provider (OpenAI, Anthropic, Groq, ...)
