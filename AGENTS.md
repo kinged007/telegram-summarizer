@@ -49,7 +49,7 @@ python summarize.py --chats John --mock
 ## Permissions and secrets
 
 - Never commit `.env`, `Templates.txt`, `*.session`, or any token. They are in `.gitignore`. The `.env` that was once in history contained only placeholders.
-- Do not copy or publish anything from private `tenantflex` org repos.
+- Do not commit secrets (API keys, tokens, .env). Only `.env.example` / `sample.env` belongs in the repo; keep credentials out of commits.
 - Use `.env` from `sample.env` for local runs; `LOGS` and `venv/` are local only.
 
 ## Skills
